@@ -67,6 +67,9 @@ enum Command {
         /// Download and install export templates alongside the Godot version
         #[arg(long)]
         with_export_templates: bool,
+        /// Reload changed GDScript files into the running game
+        #[arg(long)]
+        watch: bool,
         /// Arguments forwarded verbatim to Godot
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
@@ -223,8 +226,9 @@ fn main() -> Result<()> {
         Command::Run {
             godot,
             with_export_templates,
+            watch,
             args,
-        } => commands::run::run(&args, with_export_templates, godot),
+        } => commands::run::run(&args, with_export_templates, godot, watch),
         Command::Add(AddArgs {
             type_or_input,
             input,

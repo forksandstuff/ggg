@@ -249,29 +249,37 @@ impl TestProject {
 pub fn noop_executable() -> std::path::PathBuf {
     static NOOP: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
     NOOP.get_or_init(|| {
-        let dir = std::path::PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-        let src = dir.join("noop.rs");
-        let exe = dir.join(if cfg!(target_os = "windows") {
-            "noop.exe"
-        } else {
-            "noop"
-        });
-        std::fs::write(&src, "fn main() {}\n").unwrap();
-        let status = std::process::Command::new("rustc")
-            .arg("-C")
-            .arg("opt-level=0")
-            .arg("-o")
-            .arg(&exe)
-            .arg(&src)
-            .status()
-            .expect("failed to run rustc (is the toolchain on PATH?)");
-        assert!(
-            status.success(),
-            "rustc failed to compile the no-op executable"
-        );
-        exe
+        compile_executable(
+            "noop",
+            "fn main() {}
+",
+        )
     })
     .clone()
+}
+
+/// Compile the Rust program `source` with `rustc` into an executable called
+/// `name` in `CARGO_TARGET_TMPDIR`, for stand-ins that must do more than
+/// [`noop_executable`]. Callers cache the result.
+pub fn compile_executable(name: &str, source: &str) -> std::path::PathBuf {
+    let dir = std::path::PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
+    let src = dir.join(format!("{name}.rs"));
+    let exe = dir.join(if cfg!(target_os = "windows") {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    });
+    std::fs::write(&src, source).unwrap();
+    let status = std::process::Command::new("rustc")
+        .arg("-C")
+        .arg("opt-level=0")
+        .arg("-o")
+        .arg(&exe)
+        .arg(&src)
+        .status()
+        .expect("failed to run rustc (is the toolchain on PATH?)");
+    assert!(status.success(), "rustc failed to compile {name}");
+    exe
 }
 
 /// A fluent builder for `ggg.toml` fixtures.

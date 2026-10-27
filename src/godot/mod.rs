@@ -4,9 +4,11 @@
 pub mod asset_lib;
 pub mod asset_store;
 pub mod cache;
+pub mod debugger;
 pub mod download;
 pub mod engine;
 pub mod export_templates;
 pub mod manifest;
 pub mod project;
 pub mod release;
+pub mod watch;

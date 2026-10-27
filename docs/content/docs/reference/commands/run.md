@@ -4,7 +4,7 @@ weight = 6
 +++
 
 ```
-ggg run [--with-export-templates] [--godot <path>] [<godot-args>...]
+ggg run [--with-export-templates] [--godot <path>] [--watch] [<godot-args>...]
 ```
 
 Runs the current project using the Godot version declared in `ggg.toml`. If that version is not yet cached, it is downloaded first. A different executable can be supplied with `--godot` or `GGG_GODOT_EXECUTABLE` instead.
@@ -32,6 +32,8 @@ ggg run --with-export-templates --headless
 If `export_templates = true` is set in `ggg.toml`, templates are always ensured without needing this flag.
 
 **`--godot <path>`:** use the Godot executable at `<path>` instead of the managed version declared in `ggg.toml`. No engine is downloaded or cached. The path must exist and be a regular file, otherwise `ggg run` fails with an error naming the flag. When this flag is set it takes precedence over the `GGG_GODOT_EXECUTABLE` environment variable.
+
+**`--watch`:** reload GDScript files into the running game as they are saved, keeping the state of existing objects, like the editor's "Synchronize Script Changes". ggg starts Godot with `--remote-debug` pointing at a debugger of its own, which does not pause the game at breakpoints or script errors. Scenes, resources and GDExtension libraries still need a restart.
 
 ## Notes
 

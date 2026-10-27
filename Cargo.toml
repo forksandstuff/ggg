@@ -25,6 +25,7 @@ diffy = "0.3"
 globset = "0.4"
 terminal_size = "0.4.4"
 versions = "8"
+notify-debouncer-mini = "0.7"
 
 [dev-dependencies]
 assert_cmd = "2"
