@@ -75,11 +75,7 @@ pub fn run(file: Option<&str>) -> Result<()> {
         if any_printed {
             println!();
         }
-        println!(
-            "Diff for {} ({}):",
-            work.resolved.name(),
-            &work.resolve_note
-        );
+        println!("Diff for {} ({}):", work.resolved.name(), work.resolve_note);
 
         for path in modified {
             let Some(cache_path) = file_map.get(path) else {

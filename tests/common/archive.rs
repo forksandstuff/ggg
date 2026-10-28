@@ -71,7 +71,7 @@ pub fn fake_godot_asset(release: &GodotRelease) -> (String, Vec<u8>) {
 /// Build a fake Godot export-templates `.tpz` for `release`.
 ///
 /// A `.tpz` is Godot's name for a zip holding export templates. This archive
-/// contains only `templates/version.txt` — the file ggg's export-template
+/// contains only `templates/version.txt`, the file ggg's export-template
 /// installer (`ExportTemplateCache` in `src/godot/export_templates.rs`) treats
 /// as the completion marker for an install. The bytes are served as the
 /// download the Godot downloads host returns for export templates.

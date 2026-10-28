@@ -167,7 +167,7 @@ fn add_rejects_duplicate_name() {
 
 #[test]
 fn add_fails_with_no_args() {
-    // Running `ggg add` with no arguments is ambiguous — the tool cannot
+    // Running `ggg add` with no arguments is ambiguous: the tool cannot
     // know whether the user intends a git, archive, or asset dependency.
     // It must fail with an error explaining the expected usage.
     let project = TestProject::new();

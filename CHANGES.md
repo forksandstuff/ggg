@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Breaking Changes
+- `ggg run` and `ggg edit` now exit with Godot's exit code instead of always exiting with 0, so scripts and CI can rely on it. On Linux and macOS, Godot being killed by signal N is reported as 128 + N. Scripts that expected `ggg run` to always succeed may now see non-zero exit codes.
+- Errors reported by ggg itself now exit with code 2 instead of 1 for all commands, matching uv. This keeps ggg failures (missing `ggg.toml`, failed download, invalid `--godot` path, ...) distinguishable from Godot exiting with 1. `ggg diff` still exits with 1 when it finds modified files.
+
+### Added
+- `ggg run` and `ggg edit` no longer exit on Ctrl+C before Godot does; Godot handles the interrupt and its exit code is reported. On Linux and macOS, signals sent to ggg (SIGTERM, SIGHUP, SIGQUIT, SIGUSR1, SIGUSR2, and SIGINT outside an interactive terminal, among others) are forwarded to Godot.
+
 ## [0.5.0] - 2026-09-25
 
 ### Breaking Changes

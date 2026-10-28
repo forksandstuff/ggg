@@ -3,6 +3,9 @@
 //! Resolves the Godot executable (honouring a `--godot` override or
 //! `GGG_GODOT_EXECUTABLE`), then launches it against the current project. Any
 //! additional arguments are forwarded verbatim to the Godot process.
+//!
+//! Once Godot exits, ggg exits with Godot's exit code (see [`engine::exit_code`]),
+//! so scripts and CI can rely on it.
 
 use anyhow::Result;
 use std::path::Path;
@@ -25,6 +28,6 @@ pub fn run(args: &[String], with_export_templates: bool, godot: Option<String>) 
         export_templates::ensure_export_templates(&config.project.godot)?;
     }
 
-    engine::launch(&executable, args)?;
-    Ok(())
+    let status = engine::launch(&executable, args)?;
+    std::process::exit(engine::exit_code(status));
 }

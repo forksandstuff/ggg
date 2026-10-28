@@ -35,6 +35,12 @@ If `export_templates = true` is set in `ggg.toml`, templates are always ensured 
 
 **`--godot <path>`:** use the Godot executable at `<path>` instead of the managed version declared in `ggg.toml`. No engine is downloaded or cached. The path must exist and be a regular file, otherwise `ggg edit` fails with an error naming the flag. When this flag is set it takes precedence over the `GGG_GODOT_EXECUTABLE` environment variable.
 
+## Exit status
+
+`ggg edit` exits with the exit code of the Godot process, the same way as [`ggg run`](@/docs/reference/commands/run.md#exit-status): Godot's own code, 128 + N on Linux and macOS when Godot was killed by signal N, and 2 when ggg itself failed before Godot started. Ctrl+C and termination signals are handled the same way too.
+
+When the editor restarts itself (for example after changing a setting that requires a restart, or reloading the project), Godot starts a new process and the original one exits. `ggg edit` returns as soon as the original process exits and reports its exit code. It does not wait for the restarted editor.
+
 ## Notes
 
 - Requires a `ggg.toml` in the current directory.

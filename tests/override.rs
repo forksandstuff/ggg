@@ -2,7 +2,7 @@
 //! `GGG_GODOT_EXECUTABLE` env var).
 //!
 //! The override lets a user supply their own Godot binary instead of the
-//! managed download. These tests prove the launch path (the no-op binary
+//! managed download. These tests prove the launch path (the fake Godot binary
 //! compiled at test time), the guardrail (an invalid path is a clear error),
 //! the precedence (`--godot` > env var > managed default), and that an
 //! override performs no managed download.
@@ -12,7 +12,7 @@ mod common;
 use predicates::str::contains;
 
 use common::TestProject;
-use common::noop_executable;
+use common::fake_godot_executable;
 use ggg::envvars::GODOT_EXECUTABLE_ENV_VAR;
 
 /// A path within `dir` that is guaranteed not to exist yet.
@@ -37,7 +37,7 @@ fn assert_no_engine_cached(project: &TestProject) {
 
 #[test]
 fn run_godot_flag_launches_override_without_downloading() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let project = TestProject::new();
     project.config().write_no_seed();
 
@@ -53,11 +53,11 @@ fn run_godot_flag_launches_override_without_downloading() {
 
 #[test]
 fn edit_godot_flag_launches_override_without_downloading() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let project = TestProject::new();
     project.config().write_no_seed();
 
-    // `ggg edit` forwards `--editor .`; the no-op binary must ignore it.
+    // `ggg edit` forwards `--editor .`; the fake binary must ignore it.
     project
         .cmd()
         .args(["edit", "--godot"])
@@ -74,7 +74,7 @@ fn edit_godot_flag_launches_override_without_downloading() {
 
 #[test]
 fn run_env_var_launches_override_without_downloading() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let mut project = TestProject::new();
     project.env(GODOT_EXECUTABLE_ENV_VAR, exe.display().to_string());
     project.config().write_no_seed();
@@ -86,7 +86,7 @@ fn run_env_var_launches_override_without_downloading() {
 
 #[test]
 fn edit_env_var_launches_override_without_downloading() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let mut project = TestProject::new();
     project.env(GODOT_EXECUTABLE_ENV_VAR, exe.display().to_string());
     project.config().write_no_seed();
@@ -112,7 +112,7 @@ fn run_godot_flag_missing_path_errors_clearly() {
         .args(["run", "--godot"])
         .arg(&missing)
         .assert()
-        .failure()
+        .code(2)
         .stderr(contains("does not exist"))
         .stderr(contains("--godot"))
         .stderr(contains(missing.display().to_string()));
@@ -132,7 +132,7 @@ fn run_godot_flag_directory_path_errors_clearly() {
         .args(["run", "--godot"])
         .arg(dir.path())
         .assert()
-        .failure()
+        .code(2)
         .stderr(contains("not a file"))
         .stderr(contains("--godot"));
 
@@ -151,7 +151,7 @@ fn run_env_var_missing_path_errors_clearly() {
         .cmd()
         .arg("run")
         .assert()
-        .failure()
+        .code(2)
         .stderr(contains("does not exist"))
         .stderr(contains("GGG_GODOT_EXECUTABLE"))
         .stderr(contains(missing.display().to_string()));
@@ -165,7 +165,7 @@ fn run_env_var_missing_path_errors_clearly() {
 
 #[test]
 fn godot_flag_wins_over_invalid_env_var() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let tmp = tempfile::tempdir().unwrap();
     let missing = missing_path(tmp.path());
     let mut project = TestProject::new();
@@ -185,7 +185,7 @@ fn godot_flag_wins_over_invalid_env_var() {
 
 #[test]
 fn godot_flag_overrides_valid_env_var() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let tmp = tempfile::tempdir().unwrap();
     let missing = missing_path(tmp.path());
     let mut project = TestProject::new();
@@ -199,7 +199,7 @@ fn godot_flag_overrides_valid_env_var() {
         .args(["run", "--godot"])
         .arg(&missing)
         .assert()
-        .failure()
+        .code(2)
         .stderr(contains("does not exist"))
         .stderr(contains("--godot"));
 
@@ -212,7 +212,7 @@ fn godot_flag_overrides_valid_env_var() {
 
 #[test]
 fn sync_env_var_skips_managed_download() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let mut project = TestProject::new();
     project.env(GODOT_EXECUTABLE_ENV_VAR, exe.display().to_string());
     project.config().write_no_seed();
@@ -225,7 +225,7 @@ fn sync_env_var_skips_managed_download() {
 
 #[test]
 fn sync_godot_flag_skips_managed_download() {
-    let exe = noop_executable();
+    let exe = fake_godot_executable();
     let project = TestProject::new();
     project.config().write_no_seed();
 
@@ -252,7 +252,7 @@ fn sync_godot_flag_missing_path_errors_clearly() {
         .args(["sync", "--godot"])
         .arg(&missing)
         .assert()
-        .failure()
+        .code(2)
         .stderr(contains("does not exist"))
         .stderr(contains("--godot"))
         .stderr(contains(missing.display().to_string()));

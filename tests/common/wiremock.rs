@@ -86,7 +86,7 @@ impl AssetSearchBody {
 /// [`Self::new`] reports a `download_url` supplied by the caller, while
 /// [`Self::new_with_file`] hands the archive to
 /// [`MockApi::mount_asset_detail`], which serves those bytes and rewrites
-/// `download_url` — so a file and a URL never have to be kept in sync.
+/// `download_url`, so a file and a URL never have to be kept in sync.
 #[derive(Debug, Serialize)]
 pub struct AssetDetailBody {
     #[serde(serialize_with = "serialize_u32_as_string")]
@@ -112,7 +112,7 @@ pub struct AssetDetailBody {
     /// URL for the asset's page on the asset library website.
     pub browse_url: String,
     /// Optional archive (zip) served as `download_url`. Hidden from the
-    /// serialised response — it is not part of the wire format.
+    /// serialised response because it is not part of the wire format.
     #[serde(skip)]
     pub file: Option<Vec<u8>>,
 }

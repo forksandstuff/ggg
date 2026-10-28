@@ -85,7 +85,7 @@ Adds an archive dependency. Unlike git dependencies, no network request is made 
 
 **URL:** a direct download link to a `.zip`, `.tar.gz`, or `.tgz` file.
 
-**`--name`:** override the dependency name. If omitted (and `--yes` is not set) a name is proposed based on the URL's filename — `debug_draw_3d.zip` becomes `debug-draw-3d` — and you are prompted to accept or change it.
+**`--name`:** override the dependency name. If omitted (and `--yes` is not set) a name is proposed based on the URL's filename (`debug_draw_3d.zip` becomes `debug-draw-3d`), and you are prompted to accept or change it.
 
 **`--sha256`:** the expected SHA-256 hex digest of the archive. Strongly recommended: `ggg sync` will verify every download against this hash and fail if they do not match, protecting against accidental or malicious changes at the source URL. If omitted, a reminder is printed.
 
@@ -118,7 +118,7 @@ ggg add 54
 
 Searches the [Godot Asset Library](https://godotengine.org/asset-library/) and adds the selected asset as a dependency. The Godot version declared in `ggg.toml` is used to filter results to compatible assets.
 
-**Query:** a name or keyword to search for. If you already know the numeric asset ID, pass it directly (with or without the keyword) or use `--id` — both skip the search.
+**Query:** a name or keyword to search for. If you already know the numeric asset ID, pass it directly (with or without the keyword) or use `--id`. Both skip the search.
 
 **`--id`:** bypass the search and add the asset with this ID directly. Useful when you have the asset page URL from the website.
 
@@ -168,7 +168,7 @@ Adds a [Godot Asset Store](https://store.godotengine.org/) dependency. Store ass
 ggg add asset-store souleat/godot-xoshiro256-plus-plus
 ```
 
-The exact release that gets pinned is printed on the `Found:` line and stored in `ggg.toml`. If the add runs non-interactively (`--yes`), the pinned release is still resolved at add time — the version string is always written into the config.
+The exact release that gets pinned is printed on the `Found:` line and stored in `ggg.toml`. If the add runs non-interactively (`--yes`), the pinned release is still resolved at add time, so the version string is always written into the config.
 
 **Pinning a version:** append `:version` to the reference:
 
@@ -182,7 +182,7 @@ Pinning a release that is incompatible with the project's Godot version is allow
 
 **`--name`:** override the dependency name instead of accepting the suggested one (derived from the asset's display name).
 
-**`--yes`:** skip prompts. Requires a reference argument — you can't search non-interactively.
+**`--yes`:** skip prompts. Requires a reference argument, since you can't search non-interactively.
 
 ### Example output
 
