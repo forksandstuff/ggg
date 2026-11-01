@@ -1,5 +1,7 @@
 use ggg::commands;
 
+use std::process::ExitCode;
+
 use anyhow::{Result, bail};
 use clap::{Args, Parser, Subcommand};
 
@@ -206,8 +208,24 @@ struct AddArgs {
     id: Option<u32>,
 }
 
-fn main() -> Result<()> {
+/// Exit code for any error ggg itself reports, matching uv. Kept distinct from
+/// 1 so callers of `ggg run` / `ggg edit` can tell a ggg failure apart from
+/// Godot exiting with 1. Clap's own usage errors also exit with 2.
+const ERROR_EXIT_CODE: u8 = 2;
+
+fn main() -> ExitCode {
     let cli = Cli::parse();
+    match run(cli) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            // Same format as returning the error from `main` (full context chain).
+            eprintln!("Error: {err:?}");
+            ExitCode::from(ERROR_EXIT_CODE)
+        }
+    }
+}
+
+fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Command::Init {
             with_export_templates,

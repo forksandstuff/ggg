@@ -161,12 +161,10 @@ fn find_macos_app_executable(dir: &Path) -> Option<PathBuf> {
     let entries = std::fs::read_dir(dir).ok()?;
     for entry in entries.filter_map(|e| e.ok()) {
         let path = entry.path();
-        if path.is_dir() {
-            if path.extension().and_then(|e| e.to_str()) == Some("app") {
-                let exe = path.join("Contents").join("MacOS").join("Godot");
-                if exe.is_file() {
-                    return Some(exe);
-                }
+        if path.is_dir() && path.extension().and_then(|e| e.to_str()) == Some("app") {
+            let exe = path.join("Contents").join("MacOS").join("Godot");
+            if exe.is_file() {
+                return Some(exe);
             }
         }
     }

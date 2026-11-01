@@ -92,7 +92,14 @@ impl TestProject {
     /// The compiled `ggg` binary, run with the project directory as cwd and
     /// any env vars set via [`Self::env`] applied.
     pub fn cmd(&self) -> Command {
-        let mut cmd = Command::cargo_bin("ggg").unwrap();
+        Command::from_std(self.std_cmd())
+    }
+
+    /// Like [`Self::cmd`], but as a plain [`std::process::Command`] for tests
+    /// that need to spawn `ggg` and interact with the running process (e.g.
+    /// send it signals) instead of just asserting on its output.
+    pub fn std_cmd(&self) -> std::process::Command {
+        let mut cmd = std::process::Command::new(assert_cmd::cargo::cargo_bin("ggg"));
         cmd.current_dir(self.dir.path());
         for (var, value) in &self.envs {
             cmd.env(var, value);
@@ -233,34 +240,57 @@ impl TestProject {
     }
 }
 
-/// The path to a compiled no-op executable that exits with status 0 and
-/// ignores every argument it is given.
+/// Env var that controls how [`fake_godot_executable`] behaves. It is read
+/// from the environment rather than the arguments because `ggg edit` prepends
+/// `--editor .` to whatever is forwarded.
+pub const FAKE_GODOT_ENV_VAR: &str = "GGG_FAKE_GODOT";
+
+/// Source of the fake Godot binary. Behaviour by [`FAKE_GODOT_ENV_VAR`]:
 ///
-/// Used as a stand-in for a user-supplied Godot binary in override tests: it
-/// must be a real native executable so launch semantics match production (a
-/// shell script or `.cmd` file would go through a different spawn path on
-/// Windows). The binary is compiled once per test process with `rustc` from a
-/// tiny `fn main() {}` source, so it is hermetic, cross-platform, and ships
-/// nothing in release artifacts.
+/// - unset or empty: exit with status 0, ignoring all arguments
+/// - an integer `n`: exit with status `n`
+/// - `abort`: abort the process (SIGABRT on Unix)
+/// - `sleep`: print `ready` to stdout, then sleep for 30 seconds and exit 0
+///   (a target for signal tests, which wait for `ready` before signalling)
+const FAKE_GODOT_SRC: &str = r#"
+fn main() {
+    let mode = std::env::var("GGG_FAKE_GODOT").unwrap_or_default();
+    match mode.as_str() {
+        "" => {}
+        "abort" => std::process::abort(),
+        "sleep" => {
+            println!("ready");
+            std::thread::sleep(std::time::Duration::from_secs(30));
+        }
+        code => std::process::exit(code.parse().expect("GGG_FAKE_GODOT must be an i32")),
+    }
+}
+"#;
+
+/// The path to a compiled stand-in for a user-supplied Godot binary. By
+/// default it exits with status 0 and ignores every argument; set
+/// [`FAKE_GODOT_ENV_VAR`] to make it exit with a given code, abort, or sleep.
 ///
-/// The artifact is written into `CARGO_TARGET_TMPDIR` (a per-test-crate
-/// directory under `target/debug/tmp/`), so `cargo clean` removes it along
-/// with the rest of the build output.
-pub fn noop_executable() -> std::path::PathBuf {
-    static NOOP: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
-    NOOP.get_or_init(|| {
+/// It must be a real native executable so launch semantics match production
+/// (a shell script or `.cmd` file would go through a different spawn path on
+/// Windows). The binary is compiled once per test process with `rustc`, so it
+/// is hermetic, cross-platform, and ships nothing in release artifacts.
+pub fn fake_godot_executable() -> std::path::PathBuf {
+    static FAKE: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+    FAKE.get_or_init(|| {
+        // `CARGO_TARGET_TMPDIR` is shared by all integration test crates, which
+        // may run concurrently, so each crate compiles its own copy.
         compile_executable(
-            "noop",
-            "fn main() {}
-",
+            &format!("fake_godot_{}", env!("CARGO_CRATE_NAME")),
+            FAKE_GODOT_SRC,
         )
     })
     .clone()
 }
 
 /// Compile the Rust program `source` with `rustc` into an executable called
-/// `name` in `CARGO_TARGET_TMPDIR`, for stand-ins that must do more than
-/// [`noop_executable`]. Callers cache the result.
+/// `name` in `CARGO_TARGET_TMPDIR` (`target/tmp/`), so `cargo clean` removes
+/// it along with the rest of the build output. Callers cache the result.
 pub fn compile_executable(name: &str, source: &str) -> std::path::PathBuf {
     let dir = std::path::PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
     let src = dir.join(format!("{name}.rs"));

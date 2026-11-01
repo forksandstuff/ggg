@@ -5,6 +5,9 @@
 //! additional arguments are forwarded verbatim to the Godot process. With
 //! `--watch`, changed GDScript files are reloaded into the running game
 //! ([`crate::godot::watch`]).
+//!
+//! Once Godot exits, ggg exits with Godot's exit code (see [`engine::exit_code`]),
+//! so scripts and CI can rely on it.
 
 use anyhow::{Context, Result};
 use std::path::Path;
@@ -33,12 +36,12 @@ pub fn run(
         export_templates::ensure_export_templates(&config.project.godot)?;
     }
 
-    if watch {
+    let status = if watch {
         let project_dir =
             std::env::current_dir().context("failed to read the current directory")?;
-        watch::run(&executable, args, &project_dir)?;
+        watch::run(&executable, args, &project_dir)?
     } else {
-        engine::launch(&executable, args)?;
-    }
-    Ok(())
+        engine::launch(&executable, args)?
+    };
+    std::process::exit(engine::exit_code(status));
 }

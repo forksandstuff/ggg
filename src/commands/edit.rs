@@ -4,6 +4,9 @@
 //! `GGG_GODOT_EXECUTABLE`), then launches it with `--editor .` to open the
 //! current project. Any additional arguments are forwarded verbatim to the
 //! Godot process.
+//!
+//! Once Godot exits, ggg exits with Godot's exit code (see [`engine::exit_code`]),
+//! so scripts and CI can rely on it.
 
 use anyhow::Result;
 use std::path::Path;
@@ -33,6 +36,6 @@ pub fn run(
     let mut args = vec!["--editor".to_string(), ".".to_string()];
     args.extend_from_slice(extra_args);
 
-    engine::launch(&executable, &args)?;
-    Ok(())
+    let status = engine::launch(&executable, &args)?;
+    std::process::exit(engine::exit_code(status));
 }
